@@ -67,8 +67,7 @@ class SpeedPredictionNetwork(tf.keras.Model):
  
         # Layer #8: Fully-Connected ==> Regression output of size output_window_size.
         self.fc_h8 = tf.keras.layers.Dense(output_window_size,
-                                           kernel_initializer=initializer,
-                                           # kernel_regularizer=tf.keras.regularizers.l2(0.1))
+                                           kernel_initializer=initializer)
     
     def call(self, input_tensor, training=False):
         # Layer #1.
