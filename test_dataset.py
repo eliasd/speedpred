@@ -52,10 +52,10 @@ def _test_helper_window(ds, stop_at_idx=5):
         if idx >= stop_at_idx:
             break
 
-        _, _, window_size = stacked_frames.shape
+        _, _, _, window_size = stacked_frames.shape
         
         for frame_idx in range(window_size):
-            frame = stacked_frames[:, :, frame_idx]
+            frame = stacked_frames[0, :, :, frame_idx]
             speed = speeds[frame_idx]
 
             print(f"Frame {idx} has speed: {speed}")
@@ -102,8 +102,8 @@ def test_original_dataset_to_end():
 
 def main():
     # test_get_original_dataset()
-    # test_get_pre_processed_dataset()
-    test_pre_processed_dataset_to_end()
+    test_get_pre_processed_dataset()
+    # test_pre_processed_dataset_to_end()
 
 if __name__ == "__main__":
     main()
