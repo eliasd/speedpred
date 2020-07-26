@@ -4,12 +4,26 @@ import cv2
 import itertools
 import tensorflow as tf
 
+# Constants for Comma.ai's speed prediction 
+# training set.
+#   - Original video data has a shape (480, 640, 3) where
+#     HEIGHT=480, WIDTH=640, CHANNELS=3 (for RGB).
+#   - Also, note that the original video image frames are 
+#     made up of pixel values that are an INTEGER type 
+#     and are between the range of 0-255 (again, for RGB).
+TRAIN_VIDEO_PATH = "./train.mp4"
+TRAIN_LABELS_PATH = "./train.txt"
+HEIGHT=480
+WIDTH=640
+CHANNELS=3
+
 
 # Generator function to retrieve frame & label from video.
 #########################################################
-# Note that frame type is integer, RGB, 0-255
-# so we convert to tf.float32 + divide by 255.0
-# to normalize pixel values to 0.0-1.0
+# Note that original frame type is integer, RGB, 0-255
+# so we convert it to tf.float32 and then divide it by 
+# 255.0 to normalize pixel values to 0.0-1.0.
+# -- this is useful later.
 def gen(video_path, label_path):
     cap = cv2.VideoCapture(video_path.decode("utf-8"))
 
@@ -25,27 +39,6 @@ def gen(video_path, label_path):
     cap.release()
     return
 
-# Construct dataset from original data.
-########################################
-ds = tf.data.Dataset.from_generator(
-        gen, 
-        # output_types=(tf.uint8, tf.float64),
-        output_types=(tf.float32, tf.float64),
-        output_shapes=([480, 640, 3], []),
-        args=("./train.mp4", "./train.txt")
-    )
-
-# Visualize original frames.
-'''
-print()
-for frame, speed in ds:
-    print('Original frame type: {}'.format(frame.dtype))
-    print("Original shape: {}".format(frame.shape))
-    print()
-    cv2.imshow("frame", frame.numpy())
-    cv2.waitKey()
-    break
-'''
 
 # Augmentation functions (per frame)
 ######################################
@@ -53,15 +46,17 @@ def to_greyscale(frame, label):
     frame = tf.image.rgb_to_grayscale(frame)
     return frame, label
 
-def shrink_w_resize(frame, label):
+def shrink_by_half_w_resize(frame, label):
     '''
-    Shrink the frame from size H=480,W=640
-    to H=240,W=320. Note that the returned frame
-    is of type tf.float32, which can cause display
-    headaches unless casted to tf.uint8 or 
-    divided by 255.
+    Shrink the frame, returning a new frame with
+    half the original height and half the original width.
+
+    In the case of the comma.ai training dataset, the 
+    original (H=480, W=640) frames will be halved to 
+    (H=240, W=320).
     '''
-    frame = tf.image.resize(frame, [240, 320], antialias=True)
+    height, width, _ = frame.shape
+    frame = tf.image.resize(frame, [height//2, width//2], antialias=True)
     return frame, label
 
 def shrink_w_resize_with_crop_or_pad(frame, label):
@@ -73,33 +68,44 @@ def shrink_w_resize_with_crop_or_pad(frame, label):
     frame = tf.image.resize_with_crop_or_pad(frame, 240, 320)
     return frame, label
 
-# Apply frame-specific augmentations.
-#####################################
-#   - convert rgb image to grey-scale.
-#   - resize image from () to ().
-augmentations = [to_greyscale, shrink_w_resize]
-for aug in augmentations:
-    ds = ds.map(aug)
+# Dataset helper functions.
+#############################
 
-# Visualize augmented frames.
-'''
-for frame, speed in ds:
-    print('Augmented frame type: {}'.format(frame.dtype))
-    print("Augmented frame shape: {}".format(frame.shape))
-    print()
-    cv2.imshow("frame", frame.numpy())
-    cv2.waitKey()
-    break
-'''
+# Gets the original dataset.
+def get_original_dataset():
+    ds = tf.data.Dataset.from_generator(
+            gen, 
+            # output_types=(tf.uint8, tf.float64),
+            output_types=(tf.float32, tf.float64),
+            output_shapes=([HEIGHT, WIDTH, CHANNELS], []),
+            args=(TRAIN_VIDEO_PATH, TRAIN_LABELS_PATH)
+        )
 
-# TODO: Create windows from sequential frames dataset.
-#       To do this, batch the dataset by the window size
-#       and then .map(func) where func reshapes or transposes
-#       the frames such that the final shape is (H, W, WINDOW_SIZE).
-# four_window_batches = ds.batch(4)
+    return ds
 
-# TODO: Create function that creates dataset, applies augmentations,
-#       and groups the frames together into windows, with the 
-#       WINDOW_SIZE being passed in as a custom parameter.
+# Applies augmentations to original dataset.
+def augment_image_frames(ds, augs=[to_greyscale, shrink_by_half_w_resize]):
+    for aug in augs:
+        ds = ds.map(aug)
+    return ds
 
+# Merges window_size number of sequential frames into one stacked 
+# tensor of shape (H, W, window_size).
+def merge_image_frames(ds, window_size):
+    window_batches = ds.batch(window_size)
+    return window_batches.map(_batch_to_window)
+
+def _batch_to_window(frames_batch, labels_batch):
+    window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
+    return window, labels_batch
+
+# Key dataset method ==> get the final pre-processed dataset.
+#   - greyscale
+#   - shrunk in half
+#   - stacked sequential image frames (num of frames given by window_size)
+#####################################################
+def get_pre_processed_dataset(window_size=4):
+    original_ds = get_original_dataset()
+    aug_ds = augment_image_frames(original_ds)
+    return merge_image_frames(aug_ds, window_size)
 
