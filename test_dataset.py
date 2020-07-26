@@ -52,15 +52,16 @@ def _test_helper_window(ds, stop_at_idx=5):
         if idx >= stop_at_idx:
             break
 
-        _, _, _, window_size = stacked_frames.shape
+        _, _, window_size = stacked_frames.shape
         
         for frame_idx in range(window_size):
-            frame = stacked_frames[0, :, :, frame_idx]
+            frame = stacked_frames[:, :, frame_idx]
             speed = speeds[frame_idx]
 
             print(f"Frame {idx} has speed: {speed}")
             print(f"Frame {idx} has type: {frame.dtype}")
             print(f"Frame {idx} has shape: {frame.shape}")
+            print(f"Frame {idx} is on channel: {frame_idx}")
             print()
 
             # Visualize the given frame.

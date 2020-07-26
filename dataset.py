@@ -97,9 +97,7 @@ def merge_image_frames(ds, window_size):
 
 def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
-    window = tf.expand_dims(window, 0)
-    # window.set_shape([1, window.shape[0], window.shape[1], window.shape[2]])
-    # window = tf.ensure_shape(window, [1, HEIGHT//2, WIDTH//2, 4])
+    window = tf.ensure_shape(window, [HEIGHT//2, WIDTH//2, 4])
     return window, labels_batch
 
 # Key dataset method ==> get the final pre-processed dataset.
