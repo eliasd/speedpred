@@ -86,14 +86,14 @@ def get_original_dataset():
 # Applies augmentations to original dataset.
 def augment_image_frames(ds, augs=[to_greyscale, shrink_by_half_w_resize]):
     for aug in augs:
-        ds = ds.map(aug)
+        ds = ds.map(aug, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     return ds
 
 # Merges window_size number of sequential frames into one stacked 
 # tensor of shape (H, W, window_size).
 def merge_image_frames(ds, window_size):
     window_batches = ds.batch(window_size)
-    return window_batches.map(_batch_to_window)
+    return window_batches.map(_batch_to_window, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
