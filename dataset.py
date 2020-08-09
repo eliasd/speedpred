@@ -68,6 +68,10 @@ def shrink_w_resize_with_crop_or_pad(frame, label):
     frame = tf.image.resize_with_crop_or_pad(frame, 240, 320)
     return frame, label
 
+def stretch_wide(frame, label):
+    frame = tf.image.resize(frame, [150, 500], antialias=True)
+    return frame, label
+
 # Dataset helper functions.
 #############################
 
@@ -84,7 +88,7 @@ def get_original_dataset():
     return ds
 
 # Applies augmentations to original dataset.
-def augment_image_frames(ds, augs=[to_greyscale, shrink_by_half_w_resize]):
+def augment_image_frames(ds, augs=[to_greyscale, stretch_wide]):
     for aug in augs:
         ds = ds.map(aug, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     return ds
@@ -97,7 +101,9 @@ def merge_image_frames(ds, window_size):
 
 def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
-    window = tf.ensure_shape(window, [HEIGHT//2, WIDTH//2, 4])
+
+    # NOTE: This must be set to the correct size.
+    window = tf.ensure_shape(window, [150, 500, 4])
     return window, labels_batch
 
 # Key dataset method ==> get the final pre-processed dataset.

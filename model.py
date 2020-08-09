@@ -12,8 +12,8 @@ class SpeedPredictionNetwork(tf.keras.Model):
         initializer = tf.initializers.VarianceScaling(scale=2.0)
 
         # Layer #1: Padding + Convolution + Batch Normalization + Relu + Dropout.
-        self.conv_h1 = tf.keras.layers.Conv2D(filters=32, 
-                                              kernel_size=3, 
+        self.conv_h1 = tf.keras.layers.Conv2D(filters=24, 
+                                              kernel_size=5, 
                                               padding='same',
                                               kernel_initializer=initializer)
         self.bn_h1 = tf.keras.layers.LayerNormalization()
@@ -21,8 +21,8 @@ class SpeedPredictionNetwork(tf.keras.Model):
         self.drop_h1 = tf.keras.layers.Dropout(0.25)
         
         # Layer #2: Padding + Convolution + Batch Normalization + RelU + Dropout.
-        self.conv_h2 = tf.keras.layers.Conv2D(filters=64, 
-                                              kernel_size=3,
+        self.conv_h2 = tf.keras.layers.Conv2D(filters=32, 
+                                              kernel_size=5,
                                               padding='same',
                                               kernel_initializer=initializer)
         self.bn_h2 = tf.keras.layers.LayerNormalization()
@@ -33,7 +33,7 @@ class SpeedPredictionNetwork(tf.keras.Model):
         self.maxPool_h3 = tf.keras.layers.MaxPool2D()
 
         # Layer #4: Padding + Convolution + Batch Normalization + ReLU + Dropout.
-        self.conv_h4 = tf.keras.layers.Conv2D(filters=128,
+        self.conv_h4 = tf.keras.layers.Conv2D(filters=64,
                                                kernel_size=3,
                                                padding='same',
                                                kernel_initializer=initializer)
@@ -42,7 +42,7 @@ class SpeedPredictionNetwork(tf.keras.Model):
         self.drop_h4 = tf.keras.layers.Dropout(0.25)
 
         # Layer #5: Padding + Convolution + Batch Normalization + ReLu + Dropout.
-        self.conv_h5 = tf.keras.layers.Conv2D(filters=160,
+        self.conv_h5 = tf.keras.layers.Conv2D(filters=128,
                                                kernel_size=3,
                                                padding='same',
                                                kernel_initializer=initializer)
@@ -54,13 +54,13 @@ class SpeedPredictionNetwork(tf.keras.Model):
         self.flatten = tf.keras.layers.Flatten()
 
         # Layer #6: Fully-Connected + ReLU + Batch Normalization + Dropout.
-        self.fc_h6 = tf.keras.layers.Dense(128, kernel_initializer=initializer)
+        self.fc_h6 = tf.keras.layers.Dense(256, kernel_initializer=initializer)
         self.bn_h6 = tf.keras.layers.LayerNormalization()
         self.relu_h6 = tf.keras.layers.ReLU()
         self.drop_h6 = tf.keras.layers.Dropout(0.25)
 
         # Layer #7: Fully-Connected + ReLU + Batch Normalization + Dropout.
-        self.fc_h7 = tf.keras.layers.Dense(128, kernel_initializer=initializer)
+        self.fc_h7 = tf.keras.layers.Dense(256, kernel_initializer=initializer)
         self.bn_h7 = tf.keras.layers.LayerNormalization()
         self.relu_h7 = tf.keras.layers.ReLU()
         self.drop_h7 = tf.keras.layers.Dropout(0.25)
