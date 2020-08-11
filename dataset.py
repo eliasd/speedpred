@@ -88,7 +88,7 @@ def get_original_dataset():
     return ds
 
 # Applies augmentations to original dataset.
-def augment_image_frames(ds, augs=[to_greyscale, stretch_wide]):
+def augment_image_frames(ds, augs=[stretch_wide]):
     for aug in augs:
         ds = ds.map(aug, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     return ds
