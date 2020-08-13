@@ -17,6 +17,9 @@ HEIGHT=480
 WIDTH=640
 CHANNELS=3
 
+TEST_VIDEO_PATH = "./test.mp4"
+TEST_LABELS_PATH = "./test.txt"
+
 
 # Generator function to retrieve frame & label from video.
 #########################################################
@@ -68,8 +71,7 @@ def shrink_w_resize_with_crop_or_pad(frame, label):
     frame = tf.image.resize_with_crop_or_pad(frame, 240, 320)
     return frame, label
 
-def stretch_wide(frame, label):
-    # frame = tf.image.resize(frame, [150, 500], antialias=True)
+def shrink_by_a_lil(frame, label):
     frame = tf.image.resize(frame, [300, 400], antialias=True)
     return frame, label
 
@@ -77,19 +79,19 @@ def stretch_wide(frame, label):
 #############################
 
 # Gets the original dataset.
-def get_original_dataset():
+def get_original_dataset(video_path=TRAIN_VIDEO_PATH, labels_path=TRAIN_LABELS_PATH):
     ds = tf.data.Dataset.from_generator(
             gen, 
             # output_types=(tf.uint8, tf.float64),
             output_types=(tf.float32, tf.float64),
             output_shapes=([HEIGHT, WIDTH, CHANNELS], []),
-            args=(TRAIN_VIDEO_PATH, TRAIN_LABELS_PATH)
+            args=(video_path, labels_path)
         )
 
     return ds
 
 # Applies augmentations to original dataset.
-def augment_image_frames(ds, augs=[to_greyscale, stretch_wide]):
+def augment_image_frames(ds, augs=[to_greyscale, shrink_by_a_lil]):
     for aug in augs:
         ds = ds.map(aug, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     return ds
@@ -112,8 +114,13 @@ def _batch_to_window(frames_batch, labels_batch):
 #   - shrunk in half
 #   - stacked sequential image frames (num of frames given by window_size)
 #####################################################
-def get_pre_processed_dataset(window_size=4):
+def get_pre_processed_train_dataset(window_size=4):
     original_ds = get_original_dataset()
+    aug_ds = augment_image_frames(original_ds)
+    return merge_image_frames(aug_ds, window_size)
+
+def get_pre_processed_test_dataset(window_size=4):
+    original_ds = get_original_dataset(TEST_VIDEO_PATH, TEST_LABELS_PATH)
     aug_ds = augment_image_frames(original_ds)
     return merge_image_frames(aug_ds, window_size)
 

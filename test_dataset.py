@@ -77,8 +77,13 @@ def test_merge_image_frames():
 
     _test_helper_window(window_ds)
 
-def test_get_pre_processed_dataset():
-    ds = get_pre_processed_dataset()
+def test_get_pre_processed_train_dataset():
+    ds = get_pre_processed_train_dataset()
+
+    _test_helper_window(ds)
+
+def test_get_pre_processed_test_dataset():
+    ds = get_pre_processed_test_dataset()
 
     _test_helper_window(ds)
 
@@ -104,7 +109,8 @@ def test_original_dataset_to_end():
 def main():
     # test_to_greyscale()
     # test_get_original_dataset()
-    test_get_pre_processed_dataset()
+    # test_get_pre_processed_train_dataset()
+    test_get_pre_processed_test_dataset()
     # test_pre_processed_dataset_to_end()
 
 if __name__ == "__main__":
