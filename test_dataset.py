@@ -102,9 +102,9 @@ def test_original_dataset_to_end():
     _test_helper_run_to_the_end(ds)
 
 def main():
-    test_to_greyscale()
+    # test_to_greyscale()
     # test_get_original_dataset()
-    # test_get_pre_processed_dataset()
+    test_get_pre_processed_dataset()
     # test_pre_processed_dataset_to_end()
 
 if __name__ == "__main__":
