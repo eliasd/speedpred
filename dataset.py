@@ -72,7 +72,7 @@ def shrink_w_resize_with_crop_or_pad(frame, label):
     return frame, label
 
 def shrink_by_a_lil(frame, label):
-    frame = tf.image.resize(frame, [300, 400], antialias=True)
+    frame = tf.image.resize(frame, [255, 340], antialias=True)
     return frame, label
 
 # Dataset helper functions.
@@ -106,7 +106,7 @@ def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
 
     # NOTE: This must be set to the correct size.
-    window = tf.ensure_shape(window, [300, 400, 4])
+    window = tf.ensure_shape(window, [255, 340, 4])
     return window, labels_batch
 
 # Key dataset method ==> get the final pre-processed dataset.
