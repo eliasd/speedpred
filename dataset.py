@@ -100,8 +100,25 @@ def augment_image_frames(ds, augs=[to_greyscale, shrink_by_a_lil]):
 # tensor of shape (H, W, window_size).
 def merge_image_frames(ds, window_size):
     window_batches = ds.batch(window_size)
-    return window_batches.map(_batch_to_window, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    return window_batches.map(
+            _get_batch_to_window(window_size), 
+            num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
 
+def _get_batch_to_window(window_size):
+    def _batch_to_window(frames_batch, labels_batch):
+        window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
+
+        # NOTE: This must be set to the correct size.
+        window = tf.ensure_shape(window, [255, 340, window_size])
+        return window, labels_batch
+
+    return _batch_to_window
+
+### Old function version.
+#####################################################
+## NOTE: this uses the constants for a window size of four + Height & Width.
+#
 def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
 
