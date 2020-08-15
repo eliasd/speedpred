@@ -109,7 +109,7 @@ def optical_flow_dense(window, labels):
 
     rgb_flow = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
 
-    return rgb_flow, labels
+    return tf.convert_to_tensor(rgb_flow, dtype=tf.float32), labels
 
 # Dataset helper functions.
 #############################
@@ -182,6 +182,7 @@ def get_pre_processed_train_dataset_w_optical_flow():
     original_ds = get_original_dataset()
     aug_ds = augment_image_frames(original_ds, augs=[shrink_by_a_lil])
     window_ds = aug_ds.batch(2)
+
     return window_ds.map(exec_optical_flow_dense, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def get_pre_processed_test_dataset_w_optical_flow():
