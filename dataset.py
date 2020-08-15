@@ -3,6 +3,7 @@
 import cv2
 import itertools
 import tensorflow as tf
+import numpy as np
 
 # Constants for Comma.ai's speed prediction 
 # training set.
@@ -75,6 +76,41 @@ def shrink_by_a_lil(frame, label):
     frame = tf.image.resize(frame, [255, 340], antialias=True)
     return frame, label
 
+def exec_optical_flow_dense(window, labels):
+    return tf.py_function(optical_flow_dense, inp=[window, labels], Tout=[tf.float32, tf.float64])
+
+def optical_flow_dense(window, labels):
+    _, height, width, channels = window.shape
+
+    front_img = window[0, :, :, :].numpy()
+    back_img = window[1, :, :, :].numpy()
+
+    front_grey = cv2.cvtColor(front_img, cv2.COLOR_RGB2GRAY)
+    back_grey = cv2.cvtColor(back_img, cv2.COLOR_RGB2GRAY)
+
+    flow = cv2.calcOpticalFlowFarneback(front_grey, 
+                                        back_grey,
+                                        flow=None,
+                                        pyr_scale=0.5,
+                                        levels=1,
+                                        winsize=15,
+                                        iterations=2,
+                                        poly_n=5,
+                                        poly_sigma=1.3,
+                                        flags=0
+    )
+
+    hsv = np.zeros((height, width, channels), dtype=np.float32)
+    magn, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+
+    hsv[:, :, 1] = cv2.cvtColor(back_img, cv2.COLOR_RGB2HSV)[:, :, 1]
+    hsv[:, :, 0] = ang * (180 / np.pi / 2)
+    hsv[:, :, 2] = cv2.normalize(magn, None, 0, 255, cv2.NORM_MINMAX)
+
+    rgb_flow = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
+    return rgb_flow, labels
+
 # Dataset helper functions.
 #############################
 
@@ -140,4 +176,19 @@ def get_pre_processed_test_dataset(window_size=4):
     original_ds = get_original_dataset(TEST_VIDEO_PATH, TEST_LABELS_PATH)
     aug_ds = augment_image_frames(original_ds)
     return merge_image_frames(aug_ds, window_size)
+
+def get_pre_processed_train_dataset_w_optical_flow():
+    # Note: with optical flow, we always use two adjacent frames.
+    original_ds = get_original_dataset()
+    aug_ds = augment_image_frames(original_ds, augs=[shrink_by_a_lil])
+    window_ds = aug_ds.batch(2)
+    return window_ds.map(exec_optical_flow_dense, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+def get_pre_processed_test_dataset_w_optical_flow():
+    # Note: with optical flow, we always use two adjacent frames.
+    original_ds = get_original_dataset(TEST_VIDEO_PATH, TEST_LABELS_PATH)
+    aug_ds = augment_image_frames(original_ds, augs=[shrink_by_a_lil])
+    window_ds = aug_ds.batch(2)
+
+    return window_ds.map(exec_optical_flow_dense, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 

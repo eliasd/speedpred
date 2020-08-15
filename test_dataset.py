@@ -106,12 +106,27 @@ def test_original_dataset_to_end():
     ds = get_original_dataset()
     _test_helper_run_to_the_end(ds)
 
+def test_get_pre_processed_train_dataset_w_optical_flow():
+    ds = get_pre_processed_train_dataset_w_optical_flow()
+
+    _test_helper_non_window(ds, stop_at_idx=350)
+
+def test_get_pre_processed_test_dataset_w_optical_flow():
+    ds = get_pre_processed_test_dataset_w_optical_flow()
+
+    _test_helper_non_window(ds, stop_at_idx=350)
+
+# Main
+#############
 def main():
     # test_to_greyscale()
     # test_get_original_dataset()
-    # test_get_pre_processed_train_dataset()
-    test_get_pre_processed_test_dataset()
+    # test_get_pre_processed_test_dataset()
     # test_pre_processed_dataset_to_end()
+
+    # test_get_pre_processed_train_dataset_w_optical_flow()
+    test_get_pre_processed_test_dataset_w_optical_flow()
+    # test_get_pre_processed_train_dataset()
 
 if __name__ == "__main__":
     main()
