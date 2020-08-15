@@ -108,8 +108,10 @@ def optical_flow_dense(window, labels):
     hsv[:, :, 2] = cv2.normalize(magn, None, 0, 255, cv2.NORM_MINMAX)
 
     rgb_flow = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+    rgb_flow = tf.convert_to_tensor(rgb_flow, dtype=tf.float32)
+    rgb_flow = tf.ensure_shape(rgb_flow, [height, width, channels])
 
-    return tf.convert_to_tensor(rgb_flow, dtype=tf.float32), labels
+    return rgb_flow, labels
 
 # Dataset helper functions.
 #############################
