@@ -73,7 +73,7 @@ def shrink_w_resize_with_crop_or_pad(frame, label):
     return frame, label
 
 def shrink_by_a_lil(frame, label):
-    frame = tf.image.resize(frame, [255, 340], antialias=True)
+    frame = tf.image.resize(frame, [240, 320], antialias=True)
     return frame, label
 
 def exec_optical_flow_dense(window, labels):
@@ -109,7 +109,7 @@ def optical_flow_dense(window, labels):
 
     rgb_flow = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
     rgb_flow = tf.convert_to_tensor(rgb_flow, dtype=tf.float32)
-    rgb_flow = tf.ensure_shape(rgb_flow, [height, width, channels])
+    rgb_flow = tf.reshape(rgb_flow, [height, width, channels])
 
     return rgb_flow, labels
 
@@ -148,7 +148,7 @@ def _get_batch_to_window(window_size):
         window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
 
         # NOTE: This must be set to the correct size.
-        window = tf.ensure_shape(window, [255, 340, window_size])
+        window = tf.ensure_shape(window, [240, 320, window_size])
         return window, labels_batch
 
     return _batch_to_window
@@ -161,7 +161,7 @@ def _batch_to_window(frames_batch, labels_batch):
     window = tf.transpose(tf.squeeze(frames_batch), perm=[1, 2, 0])
 
     # NOTE: This must be set to the correct size.
-    window = tf.ensure_shape(window, [255, 340, 4])
+    window = tf.ensure_shape(window, [240, 320, 4])
     return window, labels_batch
 
 # Key dataset method ==> get the final pre-processed dataset.
